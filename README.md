@@ -1,3 +1,5 @@
+**Look at brabches to see all up to date versions**
+
 Fallowing tutorial to learn simple react: https://www.youtube.com/watch?v=Rh3tobg7hEo
 current 29:30
 Notes: 
