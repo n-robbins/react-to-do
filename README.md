@@ -13,3 +13,18 @@ choose react
 choose js + swc
 npm install  
 npm run dev
+
+hosting front end:
+
+
+supabase backend:
+    npm install @supabase/supabase-js
+
+    create supabase-client.js file
+    use .env for key and url 
+    set up .enc with  " VITE_SUPABASE_KEY ="    "VITE_SUPABASE_URL ="
+
+
+
+    project name: react-todo-backend
+    db password: 

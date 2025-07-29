@@ -1,55 +1,79 @@
 import { useEffect, useState } from "react"
-import { NewTodoForm } from "./NewTodoForm";
+import supabase from "./supabase-client";
+import { AddTodoForm } from "./AddTodoForm";
 import { TodoList } from "./TodoList";
+import './style.css';
 
 export default function App(){
-  const [todos, setTodos] = useState(()=>{
-    const localValue = localStorage.getItem("ITMES")
-    if(localValue == null){
-      return []
-    }
-    return JSON.parse(localValue)
-  }
-  );
-
+  const [todoList, setTodoList] = useState([]);
+  
   useEffect(() => {
-    localStorage.setItem("ITMES",   JSON.stringify(todos))
-  },[todos]
-  )
+    fetchTodos()
+  },[])
 
-  function addTodo(title){
-    setTodos(currentTodos => {
-      const updatedCurrentTodos = [...currentTodos, 
-      {id:crypto.randomUUID(), title: title, completed: false}];
-      console.log(updatedCurrentTodos)
-      return updatedCurrentTodos;
-    })
+  const addTodo = async (newTodoData)=>{
+    const {data,error} = await supabase.from("Todo").insert([newTodoData]).select().single();
+    if (error){
+      console.log("error adding todo ", error);
+    }
+    else{
+      setTodoList(
+        currentTodos => {
+          return [data,...currentTodos];
+        }
+        
+      );
+      
+    }
   }
-      function toggleTodo(id, completed){
-        setTodos(currentTodos =>{
-          return currentTodos.map(todo =>{
-            if (todo.id === id){
-              return{ ...todo, completed}
-            }
-            return todo;
-          })
-        })
+
+  const deleteTodo = async (id) =>{
+    const {data,error} = await supabase.from("Todo").delete().eq('id',id);
+    if (error) {
+      console.log("error deleting todo: " , error);
     }
-    function deleteItem(id){
-        setTodos( currentTodos =>{
-          return currentTodos.filter(todo=>{
-            return todo.id !== id
-          })
-        })
-    
+    else{
+      setTodoList((currentTodos) =>{ 
+        return currentTodos.filter((todo)=> todo.id !== id)});
     }
 
+  }
 
-  return <>
-  <NewTodoForm onSubmit = {addTodo}/>
+  const toggleIsCompleted = async (id, completed) =>{
+    console.log("completed: ", completed, "id: ", id);
+    const {data,error} = await supabase.from("Todo").update({isCompleted: completed}).eq('id',id);
+    if (error){
+      console.log("error toggleing todo: ", error);
+    }
+    else{
+      setTodoList(currentTodos =>{
+        return currentTodos.map(todo =>{
+          if (todo.id === id){
+            return{ ...todo, isCompleted: completed}
+          }
+          return todo;
+        })
+      })
+    }
+  }
 
-  <h1 id = "header">Todo List </h1>
-  <TodoList todos= {todos} toggleTodo={toggleTodo} deleteTodo={deleteItem}/>
-  </>
+  const fetchTodos = async ()=>{
+    const {data,error} = await supabase.from("Todo").select("*") .order('created_at', { ascending: false });
+    if (error){
+      console.log("error fetching todos: ", error)
+    }
+    else {
+      setTodoList(data);
+      console.log("Fetched todos:", data);  
+    }
+  }
 
+  return(
+    <>
+    <h1 className = "page-title">Todo List with supabase</h1>
+    <AddTodoForm addTodo={addTodo}/>
+    <TodoList todoList={todoList} deleteTodo={deleteTodo} toggleIsCompleted={toggleIsCompleted}/>
+
+    </>
+  )
 }
